@@ -1,0 +1,366 @@
+{
+  "name": "Leave request",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intelligent HR Leave Management Assistant.\n\n\nHere is the data of employee who get leave {{ $json.markdown }}\n\nHere is the leave request employee {{ $json.markdown }}\n\nWhat is your role is to check the leave request employee with employee who get leave if he has remaining leaves approve the leave or else reject it \n\noutput i need is \nleave request employee's Mail id {{ $json.markdown }}\n\nStatus \"For Example: approved\"\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -80
+      ],
+      "id": "52b9a293-2f3b-4e71-a221-c96908f88c4b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        620,
+        260
+      ],
+      "id": "2d749125-d646-402f-92b1-fdd63a8f40d4",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1PG0Pjy-OADT62aSQfemArVZArxmwikXGuBb22hez-dg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PG0Pjy-OADT62aSQfemArVZArxmwikXGuBb22hez-dg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "1591b3b2-0b43-43e0-925a-575fa7b8103c",
+      "name": "Google Sheets1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/10gjKQ_igD2a-zsjESFe4H-bzyqXXgTsQflXyGBqZLYE/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10gjKQ_igD2a-zsjESFe4H-bzyqXXgTsQflXyGBqZLYE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email Id ": "={{ $json.From }}",
+            "Message ": "={{ $json.snippet }}"
+          },
+          "matchingColumns": [
+            "Email Id "
+          ],
+          "schema": [
+            {
+              "id": "Email Id ",
+              "displayName": "Email Id ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        20,
+        -40
+      ],
+      "id": "985e4e45-1c8d-42aa-9b21-ca80eb2059d3",
+      "name": "Leave Req",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KQN9hNXKXZB8B8a4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        20
+      ],
+      "id": "ad5ea569-2116-4bfc-9fce-3d55764b4ed3",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3FTqieW5OLoZ9kEy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nconst headers = Object.keys(items[0].json);\nconst headerRow = `| ${headers.join(' | ')} |`;\nconst separatorRow = `| ${headers.map(() => '---').join(' | ')} |`;\n\nconst dataRows = items.map(item => {\n  return `| ${headers.map(h => item.json[h]).join(' | ')} |`;\n});\n\nconst markdownTable = [headerRow, separatorRow, ...dataRows].join('\\n');\n\nreturn [{ json: { markdown: markdownTable } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        -160
+      ],
+      "id": "a71e73e8-b644-45f6-b6f0-18d8763d324d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) return [];\n\nconst headers = Object.keys(items[0].json);\nconst headerRow = `| ${headers.join(' | ')} |`;\nconst separatorRow = `| ${headers.map(() => '---').join(' | ')} |`;\n\nconst dataRows = items.map(item => {\n  return `| ${headers.map(h => item.json[h]).join(' | ')} |`;\n});\n\nconst markdownTable = [headerRow, separatorRow, ...dataRows].join('\\n');\n\nreturn [{ json: { markdown: markdownTable } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        80
+      ],
+      "id": "4aab7236-eaa6-404d-bec4-b323814554f1",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"Email Id\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"approve\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"notapproved\": {\n\t\t\t\t\"type\": \"string\"\n\t\t\t}\n\t\t}\n\t}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        -40
+      ],
+      "id": "61064366-cd7a-4cc8-b756-afe72bdb2d8f",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.output['Email Id'] }}",
+        "subject": "Youre Leave Request is Approved",
+        "emailType": "text",
+        "message": "=Dear Employee,  Your sick leave request from 12th June 2025 to 14th June 2025 has been approved.  We hope you take this time to rest and recover. Please let us know if you require any further assistance or need to extend your leave.  Wishing you a speedy recovery!  Best regards,   HR Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1960,
+        -80
+      ],
+      "id": "24f43048-e1cd-47ea-bc30-011674515a9f",
+      "name": "Gmail",
+      "webhookId": "323ddd85-0303-4ff9-9e7c-68bf7bf0b43e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "19db1e0f-f47d-4db8-a75a-6f55e77df086",
+              "leftValue": "={{ $json.output.approve }}",
+              "rightValue": "Approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        -40
+      ],
+      "id": "e48ce35e-5be5-4298-9f3d-4e3babae5ee3",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leave Req": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leave Req",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5498e13d-11a4-4d35-bb86-9b3bbf9f9a80",
+  "meta": {
+    "instanceId": "b2e847aea1afbad20bc986fdcca4d73233c1a19e7b9e6c4bff5fd7fc4c14840c"
+  },
+  "id": "vmQzP0GRjzKdUmoJ",
+  "tags": []
+}
