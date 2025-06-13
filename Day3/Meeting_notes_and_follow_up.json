@@ -1,0 +1,233 @@
+{
+  "name": "Meeting notes and follow up",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Meeting notes ",
+        "formDescription": "This is my notes",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Meeting time",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Mail id"
+            },
+            {
+              "fieldLabel": "Notes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fd6c8b39-406f-4dcd-859c-0a7ba2e20dc9",
+      "name": "On form submission",
+      "webhookId": "55eff51c-d58a-4626-8e38-90bb3fa9d5ca"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TGN6NqZ9lPLnDGd8PS_pr4m0BkAGAoBhWeW1w7GSR6I",
+          "mode": "list",
+          "cachedResultName": "Untitled spreadsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TGN6NqZ9lPLnDGd8PS_pr4m0BkAGAoBhWeW1w7GSR6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TGN6NqZ9lPLnDGd8PS_pr4m0BkAGAoBhWeW1w7GSR6I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{ $json.Name }}",
+            "TIME": "={{ $json['Meeting time'] }}",
+            "NOTES": "={{ $json.Notes }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TIME",
+              "displayName": "TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NOTES",
+              "displayName": "NOTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "b5820792-e07e-4518-910f-b95507001b0a",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KQN9hNXKXZB8B8a4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intelligent assistant designed to process meeting summaries and extract clear, actionable tasks.\n\nAnalyze the following meeting notes submitted by a team member. Identify all distinct action items, assign them to the responsible individuals (if names are mentioned), and suggest a deadline if mentioned or implied.\n\nFormat your output as a readable text\n\nMeeting Notes:\n{{ $json.NOTES }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "0145b70a-c122-4807-8657-e8ac0c694a6b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        220
+      ],
+      "id": "c0c2c993-629f-47a5-9df1-6bf1d2f16f23",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dowJKjkO1o3jKicH",
+          "name": "Google Gemini(PaLM) Api account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "julferfarook13@gmail.com",
+        "subject": "analysed snote",
+        "emailType": "text",
+        "message": "={{ $json.output }}Thank you for your efforts and complete the tasks ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "548b980f-a239-44a5-85a9-e28b18e7924a",
+      "name": "Gmail",
+      "webhookId": "190368c5-72f0-45e4-885b-eefb28524ba6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3FTqieW5OLoZ9kEy",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a224c168-5d43-4080-861a-8d9a06cebd02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2e847aea1afbad20bc986fdcca4d73233c1a19e7b9e6c4bff5fd7fc4c14840c"
+  },
+  "id": "Oazk3l1kpwoVm9cA",
+  "tags": []
+}
